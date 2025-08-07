@@ -3,10 +3,7 @@ use cli_table::{Cell, Color, Style, Table};
 use colored::Colorize;
 use lazy_static::lazy_static;
 use libcfhdb::usb::*;
-use std::{
-    collections::HashMap, fs, ops::Deref, path::Path,
-    process::exit,
-};
+use std::{collections::HashMap, fs, ops::Deref, path::Path, process::exit};
 
 lazy_static! {
     static ref USB_PROFILE_JSON_URL: String = get_profile_url_config().usb_json_url;
