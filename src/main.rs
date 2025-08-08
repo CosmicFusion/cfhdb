@@ -8,6 +8,7 @@ use users::get_current_username;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 mod config;
+mod dmi_func;
 mod pci_func;
 mod usb_func;
 
@@ -20,6 +21,8 @@ i18n!("locales", fallback = "en_US");
 pub struct ProfileUrlConfig {
     pci_json_url: String,
     usb_json_url: String,
+    dmi_json_url: String,
+    bt_json_url: String,
 }
 
 fn print_help_msg() {
@@ -239,6 +242,11 @@ fn parse_args(args: Vec<String>) {
             "-dud" | "--disable-usb-device" => action = "dud",
             "-ssud" | "--start-usb-device" => action = "ssud",
             "-srud" | "--stop-usb-device" => action = "srud",
+            // DMI arguments
+            "-ldi" | "--list-dmi-info"  => action = "ldi",
+            "-ldp" | "--list-dmi-profiles"  => action = "ldp",
+            "-idp" | "--install-dmi-profile"  => action = "idp",
+            "-udp" | "--uninstall-dmi-profile"  => action = "udp",
             _ => {
                 additional_arguments.push(arg);
             }
@@ -369,6 +377,29 @@ fn parse_args(args: Vec<String>) {
                 std::process::exit(1);
             } else {
                 usb_func::stop_usb_device(&additional_arguments[1]);
+            }
+        }
+        // DMI arguments
+        "ldi" => {
+            dmi_func::display_dmi_info(json_mode);
+        }
+        "ldp" => {
+            dmi_func::display_dmi_profiles(json_mode);
+        }
+        "idp" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_profile_specified"));
+                std::process::exit(1);
+            } else {
+                dmi_func::install_dmi_profile(&additional_arguments[1]);
+            }
+        }
+        "udp" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_profile_specified"));
+                std::process::exit(1);
+            } else {
+                dmi_func::uninstall_dmi_profile(&additional_arguments[1]);
             }
         }
         // Unknown argument

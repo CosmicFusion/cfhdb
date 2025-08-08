@@ -1,13 +1,10 @@
-use regex::Regex;
 use serde::{Serialize, Serializer};
 use std::{
-    collections::HashMap,
-    fs::{self, File},
-    io::{self, BufRead, ErrorKind, Write},
+    fs::{self},
+    io::{self, ErrorKind, Write},
     os::unix::fs::PermissionsExt,
     sync::{Arc, Mutex},
 };
-use users::get_current_username;
 
 // Implement Serialize for Arc<Mutex<Option<Vec<Arc<CfhdbDmiProfile>>>>>
 
@@ -34,7 +31,7 @@ impl Serialize for ProfileWrapper {
 }
 
 #[derive(Serialize, Debug, Clone)]
-pub struct CfhdbDmiDevice {
+pub struct CfhdbDmiInfo {
     // BIOS
     pub bios_date: String,
     pub bios_release: String,
@@ -56,65 +53,59 @@ pub struct CfhdbDmiDevice {
     pub available_profiles: ProfileWrapper,
 }
 
-impl CfhdbDmiDevice {
-    fn get_kernel_driver(busid: &str) -> Option<String> {
-        let device_uevent_path = format!("/sys/bus/dmi/devices/{}/uevent", busid);
-        match fs::read_to_string(device_uevent_path) {
+impl CfhdbDmiInfo {
+    fn get_dmi_string(string: &str) -> Option<String> {
+        let dmi_string_path = format!("/sys/class/dmi/id/{}", string);
+        match fs::read_to_string(dmi_string_path) {
             Ok(content) => {
-                for line in content.lines() {
-                    if line.starts_with("DRIVER=") {
-                        if let Some(value) = line.splitn(2, '=').nth(1) {
-                            return Some(value.to_string());
-                        }
-                    }
-                }
+                return Some(content.trim().to_owned());
             }
             Err(_) => {}
         }
         return None;
     }
 
-    pub fn set_available_profiles(profile_data: &[CfhdbDmiProfile], device: &Self) {
+    pub fn set_available_profiles(profile_data: &[CfhdbDmiProfile], info: &Self) {
         let mut available_profiles: Vec<Arc<CfhdbDmiProfile>> = vec![];
         for profile in profile_data.iter() {
             let matching = {
                 if
                 // BIOS
                 profile.blacklisted_bios_vendors.contains(&"*".to_owned())
-                    || profile.blacklisted_bios_vendors.contains(&device.bios_vendor)
+                    || profile.blacklisted_bios_vendors.contains(&info.bios_vendor)
                     // BOARD
                     || profile.blacklisted_board_asset_tags.contains(&"*".to_owned())
-                    || profile.blacklisted_board_asset_tags.contains(&device.board_asset_tag)
+                    || profile.blacklisted_board_asset_tags.contains(&info.board_asset_tag)
                     || profile.blacklisted_board_names.contains(&"*".to_owned())
-                    || profile.blacklisted_board_names.contains(&device.board_name)
+                    || profile.blacklisted_board_names.contains(&info.board_name)
                     || profile.blacklisted_board_vendors.contains(&"*".to_owned())
-                    || profile.blacklisted_board_vendors.contains(&device.board_vendor)
+                    || profile.blacklisted_board_vendors.contains(&info.board_vendor)
                     // PRODUCT
                     || profile.blacklisted_product_families.contains(&"*".to_owned())
-                    || profile.blacklisted_product_families.contains(&device.product_family)
+                    || profile.blacklisted_product_families.contains(&info.product_family)
                     || profile.blacklisted_product_names.contains(&"*".to_owned())
-                    || profile.blacklisted_product_names.contains(&device.product_name)
+                    || profile.blacklisted_product_names.contains(&info.product_name)
                     || profile.blacklisted_product_skus.contains(&"*".to_owned())
-                    || profile.blacklisted_product_skus.contains(&device.product_sku)
+                    || profile.blacklisted_product_skus.contains(&info.product_sku)
                     // Sys
                     || profile.blacklisted_sys_vendors.contains(&"*".to_owned())
-                    || profile.blacklisted_sys_vendors.contains(&device.sys_vendor)
+                    || profile.blacklisted_sys_vendors.contains(&info.sys_vendor)
                 {
                     false
                 } else {
                     let mut result = true;
-                    for (profile_field, device_field) in [
-                        (&profile.bios_vendors, &device.bios_vendor),
-                        (&profile.board_asset_tags, &device.board_asset_tag),
-                        (&profile.board_names, &device.board_name),
-                        (&profile.board_vendors, &device.board_vendor),
-                        (&profile.product_families, &device.product_family),
-                        (&profile.product_names, &device.product_name),
-                        (&profile.product_skus, &device.product_sku),
-                        (&profile.sys_vendors, &device.sys_vendor),
+                    for (profile_field, info_field) in [
+                        (&profile.bios_vendors, &info.bios_vendor),
+                        (&profile.board_asset_tags, &info.board_asset_tag),
+                        (&profile.board_names, &info.board_name),
+                        (&profile.board_vendors, &info.board_vendor),
+                        (&profile.product_families, &info.product_family),
+                        (&profile.product_names, &info.product_name),
+                        (&profile.product_skus, &info.product_sku),
+                        (&profile.sys_vendors, &info.sys_vendor),
                     ] {
                         if profile_field.contains(&"*".to_owned())
-                            || profile_field.contains(device_field)
+                            || profile_field.contains(info_field)
                         {
                             continue;
                         } else {
@@ -131,82 +122,31 @@ impl CfhdbDmiDevice {
             };
 
             if !available_profiles.is_empty() {
-                *device.available_profiles.0.lock().unwrap() = Some(available_profiles.clone());
+                *info.available_profiles.0.lock().unwrap() = Some(available_profiles.clone());
             };
         }
     }
 
-    pub fn get_devices() -> Option<Self> {
-        let from_hex =
-            |hex_number: u32, fill: usize| -> String { format!("{:01$x}", hex_number, fill) };
-
-        // Initialize
-        let mut pacc = libdmi::DMIAccess::new(true);
-
-        // Get hardware devices
-        let dmi_devices = pacc.devices()?;
-        let mut devices = vec![];
-
-        for mut iter in dmi_devices.iter_mut() {
-            // fill in header info we need
-            iter.fill_info(libdmi::Fill::IDENT as u32 | libdmi::Fill::CLASS as u32);
-
-            let item_class = iter.class()?;
-            let item_vendor = iter.vendor()?;
-            let item_device = iter.device()?;
-            let item_class_id = from_hex(iter.class_id()? as _, 4).to_uppercase();
-            let item_device_id = from_hex(iter.device_id()? as _, 4);
-            let item_vendor_id = from_hex(iter.vendor_id()? as _, 4);
-            let item_sysfs_busid = format!(
-                "{}:{}:{}.{}",
-                from_hex(iter.domain()? as _, 4),
-                from_hex(iter.bus()? as _, 2),
-                from_hex(iter.dev()? as _, 2),
-                iter.func()?,
-            );
-            let item_started = Self::get_started(&item_sysfs_busid);
-            let item_enabled = Self::get_enabled(&item_sysfs_busid);
-            let item_sysfs_id = "".to_owned();
-            let item_kernel_driver =
-                Self::get_kernel_driver(&item_sysfs_busid).unwrap_or("Unknown".to_string());
-
-            Self {
-                class_name: item_class,
-                device_name: item_device,
-                vendor_name: item_vendor,
-                class_id: item_class_id,
-                device_id: item_device_id,
-                vendor_id: item_vendor_id,
-                started: match item_started {
-                    Ok(t) => {
-                        if item_kernel_driver != "Unknown" {
-                            Some(t)
-                        } else {
-                            None
-                        }
-                    }
-                    Err(_) => None,
-                },
-                enabled: item_enabled,
-                sysfs_busid: item_sysfs_busid,
-                sysfs_id: item_sysfs_id,
-                kernel_driver: item_kernel_driver,
-                available_profiles: ProfileWrapper(Arc::default()),
-            };
-        }
-
-        let mut uniq_devices = vec![];
-        for device in devices.iter() {
-            // Check if already in list
-            let found = uniq_devices.iter().any(|x: &Self| {
-                (device.sysfs_busid == x.sysfs_busid) && (device.sysfs_id == x.sysfs_id)
-            });
-
-            if !found {
-                uniq_devices.push(device.clone());
-            }
-        }
-        Some(uniq_devices)
+    pub fn get_dmi() -> Self {
+        let dmi = Self {
+            bios_date: Self::get_dmi_string("bios_date").unwrap_or("Unknown!".to_owned()),
+            bios_release: Self::get_dmi_string("bios_release").unwrap_or("Unknown!".to_owned()),
+            bios_vendor: Self::get_dmi_string("bios_vendor").unwrap_or("Unknown!".to_owned()),
+            bios_version: Self::get_dmi_string("bios_version").unwrap_or("Unknown!".to_owned()),
+            board_asset_tag: Self::get_dmi_string("board_asset_tag")
+                .unwrap_or("Unknown!".to_owned()),
+            board_name: Self::get_dmi_string("board_name").unwrap_or("Unknown!".to_owned()),
+            board_vendor: Self::get_dmi_string("board_vendor").unwrap_or("Unknown!".to_owned()),
+            board_version: Self::get_dmi_string("board_version").unwrap_or("Unknown!".to_owned()),
+            product_family: Self::get_dmi_string("product_family").unwrap_or("Unknown!".to_owned()),
+            product_name: Self::get_dmi_string("product_name").unwrap_or("Unknown!".to_owned()),
+            product_sku: Self::get_dmi_string("product_sku").unwrap_or("Unknown!".to_owned()),
+            product_version: Self::get_dmi_string("product_version")
+                .unwrap_or("Unknown!".to_owned()),
+            sys_vendor: Self::get_dmi_string("sys_vendor").unwrap_or("Unknown!".to_owned()),
+            available_profiles: ProfileWrapper(Arc::default()),
+        };
+        dmi
     }
 }
 
