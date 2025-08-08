@@ -1,14 +1,12 @@
 use serde::{Serialize, Serializer};
 use std::{
     collections::HashMap,
-    f32::consts::E,
-    fs::{self, File},
-    io::{self, BufRead, ErrorKind, Write},
+    fs,
+    io::{self, ErrorKind, Write},
     os::unix::fs::PermissionsExt,
     sync::{Arc, Mutex},
 };
 use tokio::runtime::Runtime;
-use users::get_current_username;
 
 // Implement Serialize for Arc<Mutex<Option<Vec<Arc<CfhdbBtProfile>>>>>
 
@@ -52,11 +50,12 @@ pub struct CfhdbBtDevice {
     pub trusted: bool,
     pub blocked: bool,
     pub address: String,
-    // Bluer
-    #[serde(skip_serializing)]
-    bluer_device: bluer::Device,
+    pub battery_level: u8,
     // Cfhdb Extras
     pub available_profiles: ProfileWrapper,
+    // Bluer
+    #[serde(skip_serializing)]
+    bluer_device: bluer::Device
 }
 
 impl CfhdbBtDevice {
@@ -66,19 +65,46 @@ impl CfhdbBtDevice {
             let matching = {
                 if (profile.blacklisted_class_ids.contains(&"*".to_owned())
                     || profile.blacklisted_class_ids.contains(&device.class_id))
-                    || (profile.blacklisted_vendor_ids.contains(&"*".to_owned())
-                        || profile.blacklisted_vendor_ids.contains(&device.vendor_id))
-                    || (profile.blacklisted_device_ids.contains(&"*".to_owned())
-                        || profile.blacklisted_device_ids.contains(&device.device_id))
+                    || (profile.blacklisted_bt_names.contains(&"*".to_owned())
+                        || profile.blacklisted_bt_names.contains(&device.name))
+                    || (profile
+                        .blacklisted_modalias_device_ids
+                        .contains(&"*".to_owned())
+                        || profile
+                            .blacklisted_modalias_device_ids
+                            .contains(&device.modalias_device_id))
+                    || (profile
+                        .blacklisted_modalias_product_ids
+                        .contains(&"*".to_owned())
+                        || profile
+                            .blacklisted_modalias_product_ids
+                            .contains(&device.modalias_product_id))
+                    || (profile
+                        .blacklisted_modalias_vendor_ids
+                        .contains(&"*".to_owned())
+                        || profile
+                            .blacklisted_modalias_vendor_ids
+                            .contains(&device.modalias_vendor_id))
                 {
                     false
                 } else {
-                    (profile.class_ids.contains(&"*".to_owned())
-                        || profile.class_ids.contains(&device.class_id))
-                        && (profile.vendor_ids.contains(&"*".to_owned())
-                            || profile.vendor_ids.contains(&device.vendor_id))
-                        && (profile.device_ids.contains(&"*".to_owned())
-                            || profile.device_ids.contains(&device.device_id))
+                    let mut result = true;
+                    for (profile_field, info_field) in [
+                        (&profile.bt_names, &device.name),
+                        (&profile.modalias_device_ids, &device.modalias_device_id),
+                        (&profile.modalias_product_ids, &device.modalias_product_id),
+                        (&profile.modalias_vendor_ids, &device.modalias_vendor_id),
+                    ] {
+                        if profile_field.contains(&"*".to_owned())
+                            || profile_field.contains(info_field)
+                        {
+                            continue;
+                        } else {
+                            result = false;
+                            break;
+                        }
+                    }
+                    result
                 }
             };
 
@@ -250,6 +276,7 @@ impl CfhdbBtDevice {
                     connected: device.is_connected().await.unwrap_or_default(),
                     trusted: device.is_trusted().await.unwrap_or_default(),
                     blocked: device.is_blocked().await.unwrap_or_default(),
+                    battery_level: device.battery_percentage().await.unwrap_or_default().unwrap_or_default(),
                     address: Self::format_bt_address(addr.0),
                     bluer_device: device,
                     available_profiles: ProfileWrapper(Arc::default()),
@@ -260,7 +287,7 @@ impl CfhdbBtDevice {
         Ok(devices)
     }
 
-    fn get_devices() -> Option<Vec<Self>> {
+    pub fn get_devices() -> Option<Vec<Self>> {
         let rt = Runtime::new().unwrap();
         match rt.block_on(Self::get_devices_future()) {
             Ok(t) => return Some(t),
@@ -289,11 +316,15 @@ pub struct CfhdbBtProfile {
     pub icon_name: String,
     pub license: String,
     pub class_ids: Vec<String>,
-    pub vendor_ids: Vec<String>,
-    pub device_ids: Vec<String>,
+    pub bt_names: Vec<String>,
+    pub modalias_vendor_ids: Vec<String>,
+    pub modalias_device_ids: Vec<String>,
+    pub modalias_product_ids: Vec<String>,
     pub blacklisted_class_ids: Vec<String>,
-    pub blacklisted_vendor_ids: Vec<String>,
-    pub blacklisted_device_ids: Vec<String>,
+    pub blacklisted_bt_names: Vec<String>,
+    pub blacklisted_modalias_vendor_ids: Vec<String>,
+    pub blacklisted_modalias_device_ids: Vec<String>,
+    pub blacklisted_modalias_product_ids: Vec<String>,
     pub packages: Option<Vec<String>>,
     pub check_script: String,
     pub install_script: Option<String>,

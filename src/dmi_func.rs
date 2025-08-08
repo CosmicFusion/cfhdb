@@ -3,7 +3,7 @@ use cli_table::{Cell, Color, Style, Table};
 use colored::Colorize;
 use lazy_static::lazy_static;
 use libcfhdb::dmi::*;
-use std::{collections::HashMap, fs, ops::Deref, path::Path, process::exit, sync::Arc};
+use std::{fs, ops::Deref, path::Path, process::exit, sync::Arc};
 
 lazy_static! {
     static ref DMI_PROFILE_JSON_URL: String = get_profile_url_config().dmi_json_url;

@@ -8,6 +8,7 @@ use users::get_current_username;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 mod config;
+mod bt_func;
 mod dmi_func;
 mod pci_func;
 mod usb_func;
@@ -247,6 +248,18 @@ fn parse_args(args: Vec<String>) {
             "-ldp" | "--list-dmi-profiles" => action = "ldp",
             "-idp" | "--install-dmi-profile" => action = "idp",
             "-udp" | "--uninstall-dmi-profile" => action = "udp",
+            // BT arguments
+            "-lbd" | "--list-bt-devices" => action = "lbd",
+            "-lbp" | "--list-bt-profiles" => action = "lbp",
+            "-ibp" | "--install-bt-profile" => action = "ibp",
+            "-ubp" | "--uninstall-bt-profile" => action = "ubp",
+            "-pbd" | "--pair-bt-device" => action = "pbd",
+            "-cbd" | "--connect-bt-device" => action = "cbd",
+            "-dbd" | "--disconnect-bt-device" => action = "dbd",
+            "-tbd" | "--trust-bt-device" => action = "tbd",
+            "-utbd" | "--untrust-bt-device" => action = "utbd",
+            "-bbd" | "--block-bt-device" => action = "bbd",
+            "-ubbd" | "--unblock-bt-device" => action = "ubbd",
             _ => {
                 additional_arguments.push(arg);
             }
@@ -400,6 +413,90 @@ fn parse_args(args: Vec<String>) {
                 std::process::exit(1);
             } else {
                 dmi_func::uninstall_dmi_profile(&additional_arguments[1]);
+            }
+        }
+        // BT arguments
+        "lbd" => {
+            bt_func::display_bt_devices(json_mode);
+        }
+        "lbp" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::display_bt_profiles(json_mode, &additional_arguments[1]);
+            }
+        }
+        "ibp" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_profile_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::install_bt_profile(&additional_arguments[1]);
+            }
+        }
+        "ubp" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_profile_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::uninstall_bt_profile(&additional_arguments[1]);
+            }
+        }
+        "pbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::pair_bt_device(&additional_arguments[1]);
+            }
+        }
+        "cbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::connect_bt_device(&additional_arguments[1]);
+            }
+        }
+        "dbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::disconnect_bt_device(&additional_arguments[1]);
+            }
+        }
+        "tbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::trust_bt_device(&additional_arguments[1]);
+            }
+        }
+        "utbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::untrust_bt_device(&additional_arguments[1]);
+            }
+        }
+        "bbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::block_bt_device(&additional_arguments[1]);
+            }
+        }
+        "ubbd" => {
+            if additional_arguments.len() < 2 {
+                eprintln!("{}", t!("no_device_specified"));
+                std::process::exit(1);
+            } else {
+                bt_func::unblock_bt_device(&additional_arguments[1]);
             }
         }
         // Unknown argument
