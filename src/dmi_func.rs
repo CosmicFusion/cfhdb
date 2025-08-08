@@ -15,7 +15,24 @@ fn display_dmi_info_print_json(dmi: &CfhdbDmiInfo) {
 }
 fn display_dmi_info_print_cli_table(dmi: &CfhdbDmiInfo) {
     let mut table_struct = vec![];
-    for (dmi_string, dmi_value) in [(t!("dmi_bios_date_string"), &dmi.bios_date)] {
+    for (dmi_string, dmi_value) in [
+        (t!("dmi_bios_date_string"), &dmi.bios_date),
+        (t!("dmi_bios_release_string"), &dmi.bios_release),
+        (t!("dmi_bios_vendor_string"), &dmi.bios_vendor),
+        (t!("dmi_bios_version_string"), &dmi.bios_version),
+        // BOARD
+        (t!("dmi_board_asset_tag_string"), &dmi.board_asset_tag),
+        (t!("dmi_board_name_string"), &dmi.board_name),
+        (t!("dmi_board_vendor_string"), &dmi.board_vendor),
+        (t!("dmi_board_version_string"), &dmi.board_version),
+        // PRODUCT
+        (t!("dmi_product_family_string"), &dmi.product_family),
+        (t!("dmi_product_name_string"), &dmi.product_name),
+        (t!("dmi_product_sku_string"), &dmi.product_sku),
+        (t!("dmi_product_version_string"), &dmi.product_version),
+        // Sys
+        (t!("dmi_sys_vendor_string"), &dmi.sys_vendor),
+    ] {
         let cell_table = vec![
             dmi_string.cell(),
             match dmi_value.as_str() {

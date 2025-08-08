@@ -243,10 +243,10 @@ fn parse_args(args: Vec<String>) {
             "-ssud" | "--start-usb-device" => action = "ssud",
             "-srud" | "--stop-usb-device" => action = "srud",
             // DMI arguments
-            "-ldi" | "--list-dmi-info"  => action = "ldi",
-            "-ldp" | "--list-dmi-profiles"  => action = "ldp",
-            "-idp" | "--install-dmi-profile"  => action = "idp",
-            "-udp" | "--uninstall-dmi-profile"  => action = "udp",
+            "-ldi" | "--list-dmi-info" => action = "ldi",
+            "-ldp" | "--list-dmi-profiles" => action = "ldp",
+            "-idp" | "--install-dmi-profile" => action = "idp",
+            "-udp" | "--uninstall-dmi-profile" => action = "udp",
             _ => {
                 additional_arguments.push(arg);
             }

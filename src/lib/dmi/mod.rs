@@ -58,7 +58,11 @@ impl CfhdbDmiInfo {
         let dmi_string_path = format!("/sys/class/dmi/id/{}", string);
         match fs::read_to_string(dmi_string_path) {
             Ok(content) => {
-                return Some(content.trim().to_owned());
+                if content.trim().is_empty() {
+                    return None;
+                } else {
+                    return Some(content.trim().to_owned());
+                }
             }
             Err(_) => {}
         }
