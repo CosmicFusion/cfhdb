@@ -124,12 +124,12 @@ fn display_pci_profiles_print_cli_table(target: &CfhdbPciDevice) {
     let table = table_struct
         .table()
         .title(vec![
-            t!("pci_table_profile_codename").cell().bold(true),
-            t!("pci_table_name_i18n_desc").cell().bold(true),
-            t!("pci_table_name_license").cell().bold(true),
-            t!("pci_table_name_priority").cell().bold(true),
-            t!("pci_table_name_experimental").cell().bold(true),
-            t!("pci_table_name_installed").cell().bold(true),
+            t!("table_profile_codename").cell().bold(true),
+            t!("table_name_i18n_desc").cell().bold(true),
+            t!("table_name_license").cell().bold(true),
+            t!("table_name_priority").cell().bold(true),
+            t!("table_name_experimental").cell().bold(true),
+            t!("table_name_installed").cell().bold(true),
         ])
         .bold(true);
 

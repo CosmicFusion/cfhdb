@@ -63,12 +63,13 @@ fn display_bt_devices_print_cli_table(hashmap: HashMap<String, Vec<CfhdbBtDevice
         let table = table_struct
             .table()
             .title(vec![
-                t!("bt_table_vendor").cell().bold(true),
+                t!("bt_table_alias").cell().bold(true),
                 t!("bt_table_name").cell().bold(true),
-                t!("bt_table_sysfs_bus_id").cell().bold(true),
-                t!("bt_table_driver").cell().bold(true),
-                t!("bt_table_started").cell().bold(true),
-                t!("bt_table_enabled").cell().bold(true),
+                t!("bt_table_address").cell().bold(true),
+                t!("bt_table_paired").cell().bold(true),
+                t!("bt_table_connected").cell().bold(true),
+                t!("bt_table_trusted").cell().bold(true),
+                t!("bt_table_blocked").cell().bold(true),
             ])
             .bold(true);
 
@@ -126,12 +127,12 @@ fn display_bt_profiles_print_cli_table(target: &CfhdbBtDevice) {
     let table = table_struct
         .table()
         .title(vec![
-            t!("bt_table_profile_codename").cell().bold(true),
-            t!("bt_table_name_i18n_desc").cell().bold(true),
-            t!("bt_table_name_license").cell().bold(true),
-            t!("bt_table_name_priority").cell().bold(true),
-            t!("bt_table_name_experimental").cell().bold(true),
-            t!("bt_table_name_installed").cell().bold(true),
+            t!("table_profile_codename").cell().bold(true),
+            t!("table_name_i18n_desc").cell().bold(true),
+            t!("table_name_license").cell().bold(true),
+            t!("table_name_priority").cell().bold(true),
+            t!("table_name_experimental").cell().bold(true),
+            t!("table_name_installed").cell().bold(true),
         ])
         .bold(true);
 
