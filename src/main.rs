@@ -13,6 +13,18 @@ mod dmi_func;
 mod pci_func;
 mod usb_func;
 
+
+const PERM_FIX_PROG: &str = r###"
+#! /bin/bash
+
+USER=$(whoami)
+
+chown $USER:$USER -R /var/cache/cfhdb || pkexec chown $USER:$USER -R /var/cache/cfhdb 
+chmod 777 -R /var/cache/cfhdb || pkexec chmod 777 -R /var/cache/cfhdb
+rm -rf /var/cache/cfhdb/check_cmd.sh || pkexec rm -rf /var/cache/cfhdb/check_cmd.sh
+
+"###;
+
 // Init translations for current crate.
 #[macro_use]
 extern crate rust_i18n;
@@ -622,6 +634,8 @@ fn parse_args(args: Vec<String>) {
 }
 
 fn main() {
+    // fix perms
+    duct::cmd!("bash", "-c", PERM_FIX_PROG).run().unwrap();
     // Setup locales
     let current_locale = match std::env::var_os("LANG") {
         Some(v) => v.into_string().unwrap(),
