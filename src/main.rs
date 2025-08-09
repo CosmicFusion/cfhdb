@@ -198,6 +198,119 @@ fn print_help_msg() {
             "--stop-usb-device {sysfs_id}".cell(),
             "-srud".cell(),
         ],
+        // DMI arguments title
+        vec![
+            t!("")
+                .cell()
+                .bold(true)
+                .justify(Justify::Center)
+                .foreground_color(Some(Color::Yellow)),
+            t!("help_msg_title_dmi")
+                .cell()
+                .bold(true)
+                .justify(Justify::Center)
+                .foreground_color(Some(Color::Yellow)),
+            t!("")
+                .cell()
+                .bold(true)
+                .justify(Justify::Center)
+                .foreground_color(Some(Color::Yellow)),
+        ],
+        // DMI arguments entries
+        vec![
+            t!("help_msg_action_list_dmi_info").cell(),
+            "--list-dmi-info".cell(),
+            "-ldi".cell(),
+        ],
+        vec![
+            t!("help_msg_action_list_compatible_dmi_profiles").cell(),
+            "--list-dmi-profiles".cell(),
+            "-ldp".cell(),
+        ],
+        vec![
+            t!("help_msg_action_install_dmi_profile").cell(),
+            "--install-dmi-profile {profile codename}".cell(),
+            "-idp".cell(),
+        ],
+        vec![
+            t!("help_msg_action_uninstall_dmi_profile").cell(),
+            "--uninstall-dmi-profile {profile codename}".cell(),
+            "-udp".cell(),
+        ],
+        // BT arguments title
+        vec![
+            t!("")
+                .cell()
+                .bold(true)
+                .justify(Justify::Center)
+                .foreground_color(Some(Color::Yellow)),
+            t!("help_msg_title_bt")
+                .cell()
+                .bold(true)
+                .justify(Justify::Center)
+                .foreground_color(Some(Color::Yellow)),
+            t!("")
+                .cell()
+                .bold(true)
+                .justify(Justify::Center)
+                .foreground_color(Some(Color::Yellow)),
+        ],
+        // BT arguments entries
+        vec![
+            t!("help_msg_action_list_bt_devices").cell(),
+            "--list-bt-devices".cell(),
+            "-lbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_list_compatible_bt_profiles").cell(),
+            "--list-bt-profiles {address}".cell(),
+            "-lbp".cell(),
+        ],
+        vec![
+            t!("help_msg_action_install_bt_profile").cell(),
+            "--install-bt-profile {profile codename}".cell(),
+            "-ibp".cell(),
+        ],
+        vec![
+            t!("help_msg_action_uninstall_bt_profile").cell(),
+            "--uninstall-bt-profile {profile codename}".cell(),
+            "-ubp".cell(),
+        ],
+        vec![
+            t!("help_msg_action_pair_bt_device").cell(),
+            "--pair-bt-device {address}".cell(),
+            "-pbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_connect_bt_device").cell(),
+            "--connect-bt-device {address}".cell(),
+            "-cbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_disconnect_bt_device").cell(),
+            "--disconnect-bt-device {address}".cell(),
+            "-pbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_trust_bt_device").cell(),
+            "--trust-bt-device {address}".cell(),
+            "-tbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_untrust_bt_device").cell(),
+            "--untrust-bt-device {address}".cell(),
+            "-utbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_block_bt_device").cell(),
+            "--block-bt-device {address}".cell(),
+            "-bbd".cell(),
+        ],
+        vec![
+            t!("help_msg_action_unblock_bt_device").cell(),
+            "--block-bt-device {address}".cell(),
+            "-ubbd".cell(),
+        ],
     ]
     .table()
     .title(vec![
@@ -209,6 +322,7 @@ fn print_help_msg() {
         "".cell().bold(true).justify(Justify::Center),
     ])
     .bold(true);
+
 
     let table_display = table.display().unwrap();
 
