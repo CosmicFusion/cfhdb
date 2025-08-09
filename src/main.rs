@@ -320,7 +320,7 @@ fn print_help_msg() {
         ],
         vec![
             t!("help_msg_action_unblock_bt_device").cell(),
-            "--block-bt-device {address}".cell(),
+            "--unblock-bt-device {address}".cell(),
             "-ubbd".cell(),
         ],
     ]
