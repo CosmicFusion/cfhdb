@@ -259,5 +259,20 @@
     "help_msg_action_trust_bt_device": "Trust the specified Bluetooth device.",
     "help_msg_action_untrust_bt_device": "Untrust the specified Bluetooth device.",
     "help_msg_action_block_bt_device": "Block the specified Bluetooth device.",
-    "help_msg_action_unblock_bt_device": "Unblock the specified Bluetooth device."
+    "help_msg_action_unblock_bt_device": "Unblock the specified Bluetooth device.",
+    "dmi_table_string" : "DMI String",
+    "dmi_table_value" : "DMI Value",
+    "dmi_bios_date_string" : "BIOS Date",
+    "dmi_bios_release_string" : "BIOS Release",
+    "dmi_bios_vendor_string" : "BIOS Vendor",
+    "dmi_bios_version_string" : "BIOS Version",
+    "dmi_board_asset_tag_string" : "Board Asset Tag",
+    "dmi_board_name_string" : "Board Name",
+    "dmi_board_vendor_string" : "Board Vendor",
+    "dmi_board_version_string" : "Board Version",
+    "dmi_product_family_string" : "Product Family",
+    "dmi_product_name_string" : "Product Name",
+    "dmi_product_sku_string" : "Product SKU",
+    "dmi_product_version_string" : "Product Version",
+    "dmi_sys_vendor_string" : "System Vendor"
 }
