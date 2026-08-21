@@ -25,6 +25,8 @@ rm -rf /var/cache/cfhdb/check_cmd.sh || pkexec rm -rf /var/cache/cfhdb/check_cmd
 
 "###;
 
+const USER_AGENT: &'static str = "Chrome/151.0.0.0";
+
 // Init translations for current crate.
 #[macro_use]
 extern crate rust_i18n;

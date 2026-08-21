@@ -1,4 +1,4 @@
-use crate::{config::*, get_profile_url_config, run_in_lock_script};
+use crate::{USER_AGENT, config::*, get_profile_url_config, run_in_lock_script};
 use cli_table::{Cell, Color, Style, Table};
 use colored::Colorize;
 use lazy_static::lazy_static;
@@ -285,7 +285,8 @@ fn get_dmi_profiles_from_url() -> Result<Vec<CfhdbDmiProfile>, std::io::Error> {
         t!("dmi_download_starting")
     );
     let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
+               .timeout(std::time::Duration::from_secs(5))
+        .user_agent(USER_AGENT)
         .build()
         .unwrap();
     let data = match client.get(DMI_PROFILE_JSON_URL.clone()).send() {
